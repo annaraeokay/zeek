@@ -60,7 +60,7 @@ function draw() {
 if (zeekImage.complete) {
     ctx.drawImage(zeekImage, zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
 } else {
-    ctx.fillStyle = '#0288d1'; // Fallback blue square
+    ctx.fillStyle = '#'; // Fallback blue square
     ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
 }
 ctx.fillStyle = '#000000'; // Black for username
