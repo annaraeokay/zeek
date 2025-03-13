@@ -47,7 +47,7 @@ function draw() {
         if (!user.asked) {
             ctx.fillStyle = '#4caf50'; // Green with "𝕏 friend"
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#000000';
             ctx.font = '12px Arial';
             ctx.fillText('𝕏 friend', user.x * GRID_SIZE + 5, user.y * GRID_SIZE + 30);
         } else {
@@ -69,7 +69,7 @@ function draw() {
 
     // Speech bubble
     if (zeek.showMessage) {
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = '#0000FF';
         ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
         ctx.strokeStyle = '#0288d1';
         ctx.strokeRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
