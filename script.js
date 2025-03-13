@@ -57,15 +57,15 @@ function draw() {
     });
 
     // Draw Zeek with his image
-    if (zeekImage.complete) {
-        ctx.drawImage(zeekImage, zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
-    } else {
-        ctx.fillStyle = '#0288d1'; // Fallback blue square
-        ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
-    }
-    ctx.fillStyle = '#000000'; // Black for username
-    ctx.font = '12px Arial';
-    ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + 15);
+if (zeekImage.complete) {
+    ctx.drawImage(zeekImage, zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+} else {
+    ctx.fillStyle = '#0288d1'; // Fallback blue square
+    ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+}
+ctx.fillStyle = '#000000'; // Black for username
+ctx.font = '12px Arial';
+ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + 15);
 
     // Speech bubble
     if (zeek.showMessage) {
