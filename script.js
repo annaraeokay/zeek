@@ -63,7 +63,7 @@ function draw() {
         ctx.fillStyle = '#0288d1'; // Fallback blue square
         ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
     }
-    ctx.fillStyle = '#ff0000'; // Red for username
+    ctx.fillStyle = '#000000'; // Black for username
     ctx.font = '12px Arial';
     ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + 15);
 
