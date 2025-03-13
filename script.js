@@ -1,13 +1,9 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Full-screen canvas
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const GRID_WIDTH = 20;
-const GRID_HEIGHT = 20;
-const GRID_SIZE = Math.min(canvas.width / GRID_WIDTH, canvas.height / GRID_HEIGHT);
+const GRID_SIZE = 50; // 50x50 squares
+const GRID_WIDTH = 10; // 10x10 grid
+const GRID_HEIGHT = 10;
 
 // Zeek’s image with debug logs
 const zeekImage = new Image();
@@ -46,17 +42,17 @@ function draw() {
         ctx.stroke();
     }
 
-    // Draw X users
+    // Draw X users (squares)
     xUsers.forEach(user => {
         if (!user.asked) {
-            ctx.fillStyle = '#4caf50';
+            ctx.fillStyle = '#4caf50'; // Green
         } else {
-            ctx.fillStyle = '#cccccc';
+            ctx.fillStyle = '#cccccc'; // Gray
         }
         ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
         ctx.fillStyle = '#ffffff';
-        ctx.font = `${GRID_SIZE * 0.3}px Arial`;
-        ctx.fillText('X', user.x * GRID_SIZE + GRID_SIZE * 0.4, user.y * GRID_SIZE + GRID_SIZE * 0.6);
+        ctx.font = '12px Arial';
+        ctx.fillText('X', user.x * GRID_SIZE + 20, user.y * GRID_SIZE + 30);
     });
 
     // Draw Zeek with his image
@@ -67,24 +63,24 @@ function draw() {
         ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
     }
     ctx.fillStyle = '#ffffff';
-    ctx.font = `${GRID_SIZE * 0.3}px Arial`;
-    ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + GRID_SIZE * 0.3);
+    ctx.font = '12px Arial';
+    ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + 15);
 
     // Speech bubble
     if (zeek.showMessage) {
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - GRID_SIZE * 0.5, GRID_SIZE * 3, GRID_SIZE * 0.6);
+        ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
         ctx.strokeStyle = '#0288d1';
-        ctx.strokeRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - GRID_SIZE * 0.5, GRID_SIZE * 3, GRID_SIZE * 0.6);
+        ctx.strokeRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
         ctx.fillStyle = '#000000';
-        ctx.font = `${GRID_SIZE * 0.3}px Arial`;
-        ctx.fillText(zeek.message, zeek.x * GRID_SIZE + GRID_SIZE + 5, zeek.y * GRID_SIZE - GRID_SIZE * 0.1);
+        ctx.font = '14px Arial';
+        ctx.fillText(zeek.message, zeek.x * GRID_SIZE + GRID_SIZE + 5, zeek.y * GRID_SIZE + 2);
     }
 
     // Score
     ctx.fillStyle = '#000000';
-    ctx.font = `${GRID_SIZE * 0.5}px Arial`;
-    ctx.fillText(`Score: ${score}`, 10, GRID_SIZE);
+    ctx.font = '20px Arial';
+    ctx.fillText(`Score: ${score}`, 10, 30);
 }
 
 function checkCollision() {
