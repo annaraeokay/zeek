@@ -63,7 +63,7 @@ function draw() {
         ctx.fillStyle = '#0288d1'; // Fallback blue square
         ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
     }
-    ctx.fillStyle = '#ff0000'; // Changed to red for username (was #000000)
+    ctx.fillStyle = '#000000'; // Black for username
     ctx.font = '12px Arial';
     ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + 15);
 
@@ -120,10 +120,4 @@ document.addEventListener('keydown', (event) => {
 function gameLoop() {
     if (zeek.showMessage) {
         zeek.messageTimer--;
-        if (zeek.messageTimer <= 0) zeek.showMessage = false;
-    }
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
+        if (zeek
