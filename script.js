@@ -1,10 +1,11 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const GRID_SIZE = 50;
-const GRID_WIDTH = 10;
+const GRID_SIZE = 50; // 50x50 squares
+const GRID_WIDTH = 10; // 10x10 grid
 const GRID_HEIGHT = 10;
 
+// Zeek’s image
 const zeekImage = new Image();
 zeekImage.src = 'zeek.png';
 zeekImage.onload = () => console.log('Zeek image loaded!');
@@ -44,25 +45,25 @@ function draw() {
     // Draw X users
     xUsers.forEach(user => {
         if (!user.asked) {
-            ctx.fillStyle = '#4caf50';
+            ctx.fillStyle = '#4caf50'; // Green with "𝕏 friend"
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
             ctx.fillStyle = '#ffffff';
             ctx.font = '12px Arial';
             ctx.fillText('𝕏 friend', user.x * GRID_SIZE + 5, user.y * GRID_SIZE + 30);
         } else {
-            ctx.fillStyle = '#cccccc';
+            ctx.fillStyle = '#cccccc'; // Gray with no text
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
         }
     });
 
-    // Draw Zeek
+    // Draw Zeek with his image
     if (zeekImage.complete) {
         ctx.drawImage(zeekImage, zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
     } else {
-        ctx.fillStyle = '#0288d1';
+        ctx.fillStyle = '#0288d1'; // Fallback blue square
         ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
     }
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#ff0000'; // Changed to red for username (was #000000)
     ctx.font = '12px Arial';
     ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + 15);
 
