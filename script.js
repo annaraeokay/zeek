@@ -12,30 +12,30 @@ zeekImage.onload = () => console.log('Zeek image loaded!');
 zeekImage.onerror = () => console.log('Error loading zeek.png');
 
 // Sound effects
-const victorySound = new Audio('victory.mp3');
-const thunderSound = new Audio('thunder.wav');
+const victorySound = new Audio('victory.mp3'); // For level clears only
+const thunderSound = new Audio('thunder.wav'); // For level ups and victory
 
 let zeek = { x: 2, y: 1, message: "Is everything okay at home?", showMessage: false, messageTimer: 0 };
 let xUsers = [];
 let score = 0;
 let level = 1;
 let flashTimer = 0;
-let flashColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
+let flashColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']; // ROYGBIV (7 levels)
 let currentFlashColor = flashColors[0];
 let powerUpActive = false;
 let powerUpTimer = 0;
 let boss = null;
-let megaXFriend = null; // New mega X friend for level 6
+let finalBoss = null; // Big boss at level 7
 let victorySequence = false;
 let victoryTimer = 0;
 let particles = [];
 
 function spawnXUsers() {
     xUsers = [];
-    if (level === 6 && !megaXFriend && !victorySequence) {
-        // Spawn mega X friend instead of regular ones
-        megaXFriend = { x: 4, y: 4, hitsLeft: 5 }; // 2x2 size, centered
-        console.log('Spawning Mega X Friend for Level 6');
+    if (level === 7 && !finalBoss && !victorySequence) {
+        // Spawn final boss at level 7
+        finalBoss = { x: 4, y: 4, hitsLeft: 5 }; // 2x2 size, centered
+        console.log('Spawning Final Boss at Level 7');
     } else if (!victorySequence) {
         const spawnCount = Math.min(5 + (level - 1) * 3, GRID_WIDTH * GRID_HEIGHT - 1);
         console.log(`Spawning ${spawnCount} X friends for Level ${level}`);
@@ -48,7 +48,7 @@ function spawnXUsers() {
             const isPowerUp = Math.random() < 0.1;
             xUsers.push({ x, y, asked: false, powerUp: isPowerUp });
         }
-        if (level >= 5 && !boss && level < 6) {
+        if (level === 5 && !boss) { // Boss at level 5
             let bx, by;
             do {
                 bx = Math.floor(Math.random() * (GRID_WIDTH - 2));
@@ -61,6 +61,7 @@ function spawnXUsers() {
 spawnXUsers();
 
 function spawnXUser() {
+    if (level === 7 && finalBoss) return; // No regular spawns during final boss
     let x, y;
     do {
         x = Math.floor(Math.random() * GRID_WIDTH);
@@ -122,7 +123,7 @@ function draw() {
             }
         });
 
-        // Draw Boss
+        // Draw Boss (Level 5)
         if (boss) {
             ctx.fillStyle = '#800080';
             ctx.fillRect(boss.x * GRID_SIZE, boss.y * GRID_SIZE, GRID_SIZE * 2, GRID_SIZE * 2);
@@ -131,14 +132,14 @@ function draw() {
             ctx.fillText(`Hits: ${boss.hitsLeft}`, boss.x * GRID_SIZE + 10, boss.y * GRID_SIZE + 60);
         }
 
-        // Draw Mega X Friend
-        if (megaXFriend) {
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(megaXFriend.x * GRID_SIZE, megaXFriend.y * GRID_SIZE, GRID_SIZE * 2, GRID_SIZE * 2);
+        // Draw Final Boss (Level 7)
+        if (finalBoss) {
+            ctx.fillStyle = '#ff0000'; // Red for final boss
+            ctx.fillRect(finalBoss.x * GRID_SIZE, finalBoss.y * GRID_SIZE, GRID_SIZE * 2, GRID_SIZE * 2);
             ctx.fillStyle = '#ffffff';
-            ctx.font = '20px Arial';
-            ctx.fillText('Mega X Friend', megaXFriend.x * GRID_SIZE + 10, megaXFriend.y * GRID_SIZE + 30);
-            ctx.fillText(`Hits: ${megaXFriend.hitsLeft}`, megaXFriend.x * GRID_SIZE + 10, megaXFriend.y * GRID_SIZE + 60);
+            ctx.font = '24px Arial';
+            ctx.fillText('Final Boss', finalBoss.x * GRID_SIZE + 10, finalBoss.y * GRID_SIZE + 30);
+            ctx.fillText(`Hits: ${finalBoss.hitsLeft}`, finalBoss.x * GRID_SIZE + 10, finalBoss.y * GRID_SIZE + 60);
         }
 
         // Draw Zeek
@@ -189,22 +190,17 @@ function draw() {
         }
     } else {
         // Victory sequence
-        // Enlarged Zeek
         if (zeekImage.complete) {
             ctx.drawImage(zeekImage, canvas.width / 2 - GRID_SIZE * 2, canvas.height / 2 - GRID_SIZE * 2, GRID_SIZE * 4, GRID_SIZE * 4);
         } else {
             ctx.fillStyle = '#0288d1';
             ctx.fillRect(canvas.width / 2 - GRID_SIZE * 2, canvas.height / 2 - GRID_SIZE * 2, GRID_SIZE * 4, GRID_SIZE * 4);
         }
-
-        // Scrolling "Victory!" text
         ctx.fillStyle = '#ffffff';
         ctx.font = '40px Arial';
         ctx.textAlign = 'center';
         const textX = canvas.width / 2 + (victoryTimer % 200) - 100;
         ctx.fillText("Victory!", textX, canvas.height / 2 + 50);
-
-        // Particles
         particles.forEach(p => {
             ctx.fillStyle = p.color;
             ctx.fillRect(p.x, p.y, p.size, p.size);
@@ -224,7 +220,6 @@ function checkCollision() {
             zeek.showMessage = true;
             zeek.messageTimer = 60;
             user.asked = true;
-            try { victorySound.play(); } catch (e) { console.log("Victory sound failed:", e); }
             score += powerUpActive ? 2 : 1;
             if (user.powerUp) {
                 powerUpActive = true;
@@ -235,16 +230,16 @@ function checkCollision() {
                 flashTimer = 60;
                 currentFlashColor = flashColors[(level - 1) % flashColors.length];
                 try { thunderSound.play(); } catch (e) { console.log("Thunder sound failed:", e); }
+                try { victorySound.play(); } catch (e) { console.log("Victory sound failed:", e); } // Victory per level clear
                 level++;
                 score = 0;
-                spawnXUsers();
+                if (level <= 7) spawnXUsers(); // Cap at 7 levels
             }
         }
     });
 
     if (boss && zeek.x >= boss.x && zeek.x < boss.x + 2 && zeek.y >= boss.y && zeek.y < boss.y + 2) {
         boss.hitsLeft--;
-        try { victorySound.play(); } catch (e) { console.log("Victory sound failed:", e); }
         if (boss.hitsLeft <= 0) {
             boss = null;
             score += 10;
@@ -253,15 +248,15 @@ function checkCollision() {
         zeek.y = Math.max(1, Math.min(zeek.y, GRID_HEIGHT));
     }
 
-    if (megaXFriend && zeek.x >= megaXFriend.x && zeek.x < megaXFriend.x + 2 && zeek.y >= megaXFriend.y && zeek.y < megaXFriend.y + 2) {
-        megaXFriend.hitsLeft--;
-        try { victorySound.play(); } catch (e) { console.log("Victory sound failed:", e); }
-        if (megaXFriend.hitsLeft <= 0) {
-            megaXFriend = null;
+    if (finalBoss && zeek.x >= finalBoss.x && zeek.x < finalBoss.x + 2 && zeek.y >= finalBoss.y && zeek.y < finalBoss.y + 2) {
+        finalBoss.hitsLeft--;
+        if (finalBoss.hitsLeft <= 0) {
+            finalBoss = null;
             victorySequence = true;
-            victoryTimer = 180; // ~3 seconds at 60 FPS
+            victoryTimer = 180; // ~3 seconds
             spawnVictoryParticles();
             try { thunderSound.play(); } catch (e) { console.log("Thunder sound failed:", e); }
+            try { victorySound.play(); } catch (e) { console.log("Victory sound failed:", e); }
         }
         zeek.x = Math.max(0, Math.min(zeek.x, GRID_WIDTH - 1));
         zeek.y = Math.max(1, Math.min(zeek.y, GRID_HEIGHT));
