@@ -6,7 +6,12 @@ body {
     margin: 0;
     background-color: #e0f7fa;
     font-family: Arial, sans-serif;
+    touch-action: manipulation; /* Prevents pinch-zoom on mobile */
 }
+
 #gameCanvas {
     border: 2px solid #0288d1;
+    border-radius: 15px; /* Rounded corners */
+    max-width: 100%; /* Responsive for mobile */
+    max-height: 100vh;
 }
