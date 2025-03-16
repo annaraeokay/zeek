@@ -14,6 +14,8 @@ zeekImage.onerror = () => console.log('Error loading zeek.png');
 let zeek = { x: 2, y: 2, message: "Is everything okay at home?", showMessage: false, messageTimer: 0 };
 let xUsers = [];
 let score = 0;
+let cleared = false; // Tracks if timeline is cleared
+let flashTimer = 0; // For flashing effect
 
 function spawnXUser() {
     const x = Math.floor(Math.random() * GRID_WIDTH);
@@ -26,6 +28,16 @@ for (let i = 0; i < 5; i++) spawnXUser();
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Flash background when cleared
+    if (cleared && flashTimer > 0) {
+        ctx.fillStyle = (flashTimer % 20 < 10) ? '#e0f7fa' : '#ffeb3b'; // Flash light blue to yellow
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        flashTimer--;
+    } else {
+        ctx.fillStyle = '#e0f7fa'; // Default background
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     // Draw grid
     ctx.strokeStyle = '#b0bec5';
@@ -47,7 +59,7 @@ function draw() {
         if (!user.asked) {
             ctx.fillStyle = '#4caf50'; // Green with "𝕏 friend"
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = '#ffffff';
             ctx.font = '12px Arial';
             ctx.fillText('𝕏 friend', user.x * GRID_SIZE + 5, user.y * GRID_SIZE + 30);
         } else {
@@ -69,13 +81,24 @@ function draw() {
 
     // Speech bubble
     if (zeek.showMessage) {
-        ctx.fillStyle = '#0000FF';
+        ctx.fillStyle = '#ffffff';
         ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
         ctx.strokeStyle = '#0288d1';
         ctx.strokeRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
         ctx.fillStyle = '#000000';
         ctx.font = '14px Arial';
         ctx.fillText(zeek.message, zeek.x * GRID_SIZE + GRID_SIZE + 5, zeek.y * GRID_SIZE + 2);
+    }
+
+    // Cleared message
+    if (cleared && flashTimer > 0) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Semi-transparent black background
+        ctx.fillRect(100, 200, 300, 100);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText("You’ve cleared the timeline for now!", 250, 250);
+        ctx.textAlign = 'left'; // Reset alignment
     }
 
     // Score
@@ -92,11 +115,16 @@ function checkCollision() {
             user.asked = true;
             score++;
             spawnXUser();
+            if (score === 10 && !cleared) {
+                cleared = true;
+                flashTimer = 60; // Flash for ~1 second (60 frames)
+            }
         }
     });
 }
 
 document.addEventListener('keydown', (event) => {
+    if (cleared && flashTimer > 0) return; // Disable movement during flash
     let moved = false;
     switch (event.key) {
         case 'ArrowUp':
