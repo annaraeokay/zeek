@@ -1,8 +1,8 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const GRID_SIZE = 50; // 50x50 squares
-const GRID_WIDTH = 10; // 10x10 grid
+const GRID_SIZE = 50;
+const GRID_WIDTH = 10;
 const GRID_HEIGHT = 10;
 
 // Zeek’s image
@@ -11,33 +11,46 @@ zeekImage.src = 'zeek.png';
 zeekImage.onload = () => console.log('Zeek image loaded!');
 zeekImage.onerror = () => console.log('Error loading zeek.png');
 
+// Sound effects
+const victorySound = new Audio('victory.mp3');
+const thunderSound = new Audio('thunder.mp3');
+
 let zeek = { x: 2, y: 2, message: "Is everything okay at home?", showMessage: false, messageTimer: 0 };
 let xUsers = [];
 let score = 0;
-let cleared = false; // Tracks if timeline is cleared
-let flashTimer = 0; // For flashing effect
+let level = 1;
+let flashTimer = 0;
+let flashColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']; // ROYGBIV
+let currentFlashColor = flashColors[0];
+let powerUpActive = false;
+let powerUpTimer = 0;
+let boss = null;
+let bossHits = 0;
 
-function spawnXUser() {
-    const x = Math.floor(Math.random() * GRID_WIDTH);
-    const y = Math.floor(Math.random() * GRID_HEIGHT);
-    if (x !== zeek.x || y !== zeek.y) {
-        xUsers.push({ x, y, asked: false });
+function spawnXUsers() {
+    xUsers = [];
+    const spawnCount = 5 + (level - 1) * 3;
+    for (let i = 0; i < spawnCount; i++) {
+        const x = Math.floor(Math.random() * GRID_WIDTH);
+        const y = Math.floor(Math.random() * GRID_HEIGHT);
+        if (x !== zeek.x || y !== zeek.y) {
+            const isPowerUp = Math.random() < 0.1; // 10% chance for power-up
+            xUsers.push({ x, y, asked: false, powerUp: isPowerUp });
+        }
+    }
+    // Spawn boss at level 5+
+    if (level >= 5 && !boss) {
+        boss = { x: Math.floor(Math.random() * (GRID_WIDTH - 2)), y: Math.floor(Math.random() * (GRID_HEIGHT - 2)), hitsLeft: 3 };
     }
 }
-for (let i = 0; i < 5; i++) spawnXUser();
+spawnXUsers();
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Flash background when cleared
-    if (cleared && flashTimer > 0) {
-        ctx.fillStyle = (flashTimer % 20 < 10) ? '#e0f7fa' : '#ffeb3b'; // Flash light blue to yellow
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        flashTimer--;
-    } else {
-        ctx.fillStyle = '#e0f7fa'; // Default background
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    // Background with level-based color
+    ctx.fillStyle = flashTimer > 0 ? currentFlashColor : flashColors[(level - 1) % flashColors.length];
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw grid
     ctx.strokeStyle = '#b0bec5';
@@ -57,101 +70,33 @@ function draw() {
     // Draw X users
     xUsers.forEach(user => {
         if (!user.asked) {
-            ctx.fillStyle = '#4caf50'; // Green with "𝕏 friend"
+            ctx.fillStyle = user.powerUp ? '#ff0000' : '#4caf50'; // Red for power-up, green for regular
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
             ctx.fillStyle = '#ffffff';
             ctx.font = '12px Arial';
-            ctx.fillText('𝕏 friend', user.x * GRID_SIZE + 5, user.y * GRID_SIZE + 30);
+            ctx.fillText(user.powerUp ? '⚡' : '𝕏 friend', user.x * GRID_SIZE + 5, user.y * GRID_SIZE + 30);
         } else {
-            ctx.fillStyle = '#cccccc'; // Gray with no text
+            ctx.fillStyle = '#cccccc';
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
         }
     });
 
-    // Draw Zeek with his image
+    // Draw Boss
+    if (boss) {
+        ctx.fillStyle = '#800080'; // Purple boss
+        ctx.fillRect(boss.x * GRID_SIZE, boss.y * GRID_SIZE, GRID_SIZE * 2, GRID_SIZE * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '20px Arial';
+        ctx.fillText(`Hits: ${boss.hitsLeft}`, boss.x * GRID_SIZE + 10, boss.y * GRID_SIZE + 60);
+    }
+
+    // Draw Zeek
     if (zeekImage.complete) {
         ctx.drawImage(zeekImage, zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
     } else {
-        ctx.fillStyle = '#0288d1'; // Fallback blue square
+        ctx.fillStyle = '#0288d1';
         ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
     }
-    ctx.fillStyle = '#000000'; // Black for username
-    ctx.font = '12px Arial';
-    ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + 15);
-
-    // Speech bubble
-    if (zeek.showMessage) {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
-        ctx.strokeStyle = '#0288d1';
-        ctx.strokeRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
-        ctx.fillStyle = '#000000';
-        ctx.font = '14px Arial';
-        ctx.fillText(zeek.message, zeek.x * GRID_SIZE + GRID_SIZE + 5, zeek.y * GRID_SIZE + 2);
-    }
-
-    // Cleared message
-    if (cleared && flashTimer > 0) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Semi-transparent black background
-        ctx.fillRect(100, 200, 300, 100);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '20px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText("You’ve cleared the timeline for now!", 250, 250);
-        ctx.textAlign = 'left'; // Reset alignment
-    }
-
-    // Score
     ctx.fillStyle = '#000000';
-    ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${score}`, 10, 30);
-}
-
-function checkCollision() {
-    xUsers.forEach(user => {
-        if (zeek.x === user.x && zeek.y === user.y && !user.asked) {
-            zeek.showMessage = true;
-            zeek.messageTimer = 60;
-            user.asked = true;
-            score++;
-            spawnXUser();
-            if (score === 10 && !cleared) {
-                cleared = true;
-                flashTimer = 60; // Flash for ~1 second (60 frames)
-            }
-        }
-    });
-}
-
-document.addEventListener('keydown', (event) => {
-    if (cleared && flashTimer > 0) return; // Disable movement during flash
-    let moved = false;
-    switch (event.key) {
-        case 'ArrowUp':
-            if (zeek.y > 0) { zeek.y--; moved = true; }
-            break;
-        case 'ArrowDown':
-            if (zeek.y < GRID_HEIGHT - 1) { zeek.y++; moved = true; }
-            break;
-        case 'ArrowLeft':
-            if (zeek.x > 0) { zeek.x--; moved = true; }
-            break;
-        case 'ArrowRight':
-            if (zeek.x < GRID_WIDTH - 1) { zeek.x++; moved = true; }
-            break;
-    }
-    if (moved) {
-        checkCollision();
-    }
-});
-
-function gameLoop() {
-    if (zeek.showMessage) {
-        zeek.messageTimer--;
-        if (zeek.messageTimer <= 0) zeek.showMessage = false;
-    }
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
+    ctx.font = '12px Arial';
+    ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE
