@@ -25,25 +25,41 @@ let currentFlashColor = flashColors[0];
 let powerUpActive = false;
 let powerUpTimer = 0;
 let boss = null;
-let bossHits = 0;
 
 function spawnXUsers() {
-    xUsers = [];
-    const spawnCount = 5 + (level - 1) * 3;
+    xUsers = []; // Clear existing users
+    const spawnCount = Math.min(5 + (level - 1) * 3, GRID_WIDTH * GRID_HEIGHT - 1); // 5, 8, 11, etc., capped
+    console.log(`Spawning ${spawnCount} X friends for Level ${level}`); // Debug log
     for (let i = 0; i < spawnCount; i++) {
-        const x = Math.floor(Math.random() * GRID_WIDTH);
-        const y = Math.floor(Math.random() * GRID_HEIGHT);
-        if (x !== zeek.x || y !== zeek.y) {
-            const isPowerUp = Math.random() < 0.1; // 10% chance for power-up
-            xUsers.push({ x, y, asked: false, powerUp: isPowerUp });
-        }
+        let x, y;
+        do {
+            x = Math.floor(Math.random() * GRID_WIDTH);
+            y = Math.floor(Math.random() * GRID_HEIGHT);
+        } while ((x === zeek.x && y === zeek.y) || xUsers.some(u => u.x === x && u.y === y)); // Avoid overlap
+        const isPowerUp = Math.random() < 0.1; // 10% chance for power-up
+        xUsers.push({ x, y, asked: false, powerUp: isPowerUp });
     }
     // Spawn boss at level 5+
     if (level >= 5 && !boss) {
-        boss = { x: Math.floor(Math.random() * (GRID_WIDTH - 2)), y: Math.floor(Math.random() * (GRID_HEIGHT - 2)), hitsLeft: 3 };
+        let bx, by;
+        do {
+            bx = Math.floor(Math.random() * (GRID_WIDTH - 2));
+            by = Math.floor(Math.random() * (GRID_HEIGHT - 2));
+        } while (xUsers.some(u => u.x === bx && u.y === by)); // Avoid overlap
+        boss = { x: bx, y: by, hitsLeft: 3 };
     }
 }
-spawnXUsers();
+spawnXUsers(); // Initial spawn
+
+function spawnXUser() {
+    let x, y;
+    do {
+        x = Math.floor(Math.random() * GRID_WIDTH);
+        y = Math.floor(Math.random() * GRID_HEIGHT);
+    } while ((x === zeek.x && y === zeek.y) || xUsers.some(u => u.x === x && u.y === y));
+    const isPowerUp = Math.random() < 0.1;
+    xUsers.push({ x, y, asked: false, powerUp: isPowerUp });
+}
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -70,11 +86,11 @@ function draw() {
     // Draw X users
     xUsers.forEach(user => {
         if (!user.asked) {
-            ctx.fillStyle = user.powerUp ? '#ff0000' : '#4caf50'; // Red for power-up, green for regular
+            ctx.fillStyle = user.powerUp ? '#ff0000' : '#000000'; // Red for power-up, black for regular
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
             ctx.fillStyle = '#ffffff';
             ctx.font = '12px Arial';
-            ctx.fillText(user.powerUp ? '⚡' : '𝕏 friend', user.x * GRID_SIZE + 5, user.y * GRID_SIZE + 30);
+            ctx.fillText(user.powerUp ? '⚡' : 'X friend', user.x * GRID_SIZE + 5, user.y * GRID_SIZE + 30);
         } else {
             ctx.fillStyle = '#cccccc';
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
@@ -83,7 +99,7 @@ function draw() {
 
     // Draw Boss
     if (boss) {
-        ctx.fillStyle = '#800080'; // Purple boss
+        ctx.fillStyle = '#800080';
         ctx.fillRect(boss.x * GRID_SIZE, boss.y * GRID_SIZE, GRID_SIZE * 2, GRID_SIZE * 2);
         ctx.fillStyle = '#ffffff';
         ctx.font = '20px Arial';
@@ -97,9 +113,13 @@ function draw() {
         ctx.fillStyle = '#0288d1';
         ctx.fillRect(zeek.x * GRID_SIZE, zeek.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
     }
-    ctx.fillStyle = '#000000';
-    ctx.font = '12px Arial';
-    ctx.fillText('@zeek56923765420', zeek.x * GRID_SIZE + 5, zeek.y * GRID_SIZE + 15);
+
+    // Username banner
+    ctx.fillStyle = '#000000'; // Black background
+    ctx.fillRect(0, 0, canvas.width, 40); // Wider banner
+    ctx.fillStyle = '#ffffff'; // White text
+    ctx.font = '20px Arial';
+    ctx.fillText('@zeek56923765420', 10, 30);
 
     // Speech bubble
     if (zeek.showMessage) {
@@ -127,10 +147,10 @@ function draw() {
     // Score and Level
     ctx.fillStyle = '#000000';
     ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${score}`, 10, 30);
-    ctx.fillText(`Level: ${level}`, 10, 60);
+    ctx.fillText(`Score: ${score}`, 10, 70); // Adjusted for banner
+    ctx.fillText(`Level: ${level}`, 10, 100);
     if (powerUpActive) {
-        ctx.fillText("Power-Up Active!", 10, 90);
+        ctx.fillText("Power-Up Active!", 10, 130);
     }
 }
 
@@ -140,17 +160,17 @@ function checkCollision() {
             zeek.showMessage = true;
             zeek.messageTimer = 60;
             user.asked = true;
-            victorySound.play(); // Play victory chime
-            score += powerUpActive ? 2 : 1; // Double points if power-up active
+            try { victorySound.play(); } catch (e) { console.log("Victory sound failed:", e); }
+            score += powerUpActive ? 2 : 1;
             if (user.powerUp) {
                 powerUpActive = true;
-                powerUpTimer = 600; // 10 seconds at ~60 FPS
+                powerUpTimer = 600;
             }
             spawnXUser();
-            if (score >= 10) { // Trigger every 10 points
+            if (score >= 10) {
                 flashTimer = 60;
-                currentFlashColor = flashColors[(level - 1) % flashColors.length]; // Match background
-                thunderSound.play(); // Play thunder
+                currentFlashColor = flashColors[(level - 1) % flashColors.length];
+                try { thunderSound.play(); } catch (e) { console.log("Thunder sound failed:", e); }
                 level++;
                 score = 0;
                 spawnXUsers();
@@ -159,12 +179,12 @@ function checkCollision() {
     });
     if (boss && zeek.x >= boss.x && zeek.x < boss.x + 2 && zeek.y >= boss.y && zeek.y < boss.y + 2) {
         boss.hitsLeft--;
-        victorySound.play();
+        try { victorySound.play(); } catch (e) { console.log("Victory sound failed:", e); }
         if (boss.hitsLeft <= 0) {
             boss = null;
-            score += 10; // Bonus for defeating boss
+            score += 10;
         }
-        zeek.x = Math.max(0, Math.min(zeek.x, GRID_WIDTH - 1)); // Bounce back
+        zeek.x = Math.max(0, Math.min(zeek.x, GRID_WIDTH - 1));
         zeek.y = Math.max(0, Math.min(zeek.y, GRID_HEIGHT - 1));
     }
 }
