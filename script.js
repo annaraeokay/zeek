@@ -3,7 +3,7 @@ const ctx = canvas.getContext('2d');
 
 const GRID_SIZE = 50;
 const GRID_WIDTH = 10;
-const GRID_HEIGHT = 10;
+const GRID_HEIGHT = 9;
 
 // Zeek’s image
 const zeekImage = new Image();
@@ -15,47 +15,46 @@ zeekImage.onerror = () => console.log('Error loading zeek.png');
 const victorySound = new Audio('victory.mp3');
 const thunderSound = new Audio('thunder.mp3');
 
-let zeek = { x: 2, y: 2, message: "Is everything okay at home?", showMessage: false, messageTimer: 0 };
+let zeek = { x: 2, y: 1, message: "Is everything okay at home?", showMessage: false, messageTimer: 0 };
 let xUsers = [];
 let score = 0;
 let level = 1;
 let flashTimer = 0;
-let flashColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']; // ROYGBIV
+let flashColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
 let currentFlashColor = flashColors[0];
 let powerUpActive = false;
 let powerUpTimer = 0;
 let boss = null;
 
 function spawnXUsers() {
-    xUsers = []; // Clear existing users
-    const spawnCount = Math.min(5 + (level - 1) * 3, GRID_WIDTH * GRID_HEIGHT - 1); // 5, 8, 11, etc., capped
-    console.log(`Spawning ${spawnCount} X friends for Level ${level}`); // Debug log
+    xUsers = [];
+    const spawnCount = Math.min(5 + (level - 1) * 3, GRID_WIDTH * GRID_HEIGHT - 1);
+    console.log(`Spawning ${spawnCount} X friends for Level ${level}`);
     for (let i = 0; i < spawnCount; i++) {
         let x, y;
         do {
             x = Math.floor(Math.random() * GRID_WIDTH);
-            y = Math.floor(Math.random() * GRID_HEIGHT);
-        } while ((x === zeek.x && y === zeek.y) || xUsers.some(u => u.x === x && u.y === y)); // Avoid overlap
-        const isPowerUp = Math.random() < 0.1; // 10% chance for power-up
+            y = Math.floor(Math.random() * GRID_HEIGHT) + 1;
+        } while ((x === zeek.x && y === zeek.y) || xUsers.some(u => u.x === x && u.y === y));
+        const isPowerUp = Math.random() < 0.1;
         xUsers.push({ x, y, asked: false, powerUp: isPowerUp });
     }
-    // Spawn boss at level 5+
     if (level >= 5 && !boss) {
         let bx, by;
         do {
             bx = Math.floor(Math.random() * (GRID_WIDTH - 2));
-            by = Math.floor(Math.random() * (GRID_HEIGHT - 2));
-        } while (xUsers.some(u => u.x === bx && u.y === by)); // Avoid overlap
+            by = Math.floor(Math.random() * (GRID_HEIGHT - 2)) + 1;
+        } while (xUsers.some(u => u.x === bx && u.y === by));
         boss = { x: bx, y: by, hitsLeft: 3 };
     }
 }
-spawnXUsers(); // Initial spawn
+spawnXUsers();
 
 function spawnXUser() {
     let x, y;
     do {
         x = Math.floor(Math.random() * GRID_WIDTH);
-        y = Math.floor(Math.random() * GRID_HEIGHT);
+        y = Math.floor(Math.random() * GRID_HEIGHT) + 1;
     } while ((x === zeek.x && y === zeek.y) || xUsers.some(u => u.x === x && u.y === y));
     const isPowerUp = Math.random() < 0.1;
     xUsers.push({ x, y, asked: false, powerUp: isPowerUp });
@@ -68,29 +67,29 @@ function draw() {
     ctx.fillStyle = flashTimer > 0 ? currentFlashColor : flashColors[(level - 1) % flashColors.length];
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw grid
+    // Draw grid (below banner)
     ctx.strokeStyle = '#b0bec5';
     for (let i = 0; i <= GRID_WIDTH; i++) {
         ctx.beginPath();
-        ctx.moveTo(i * GRID_SIZE, 0);
+        ctx.moveTo(i * GRID_SIZE, GRID_SIZE);
         ctx.lineTo(i * GRID_SIZE, canvas.height);
         ctx.stroke();
     }
     for (let i = 0; i <= GRID_HEIGHT; i++) {
         ctx.beginPath();
-        ctx.moveTo(0, i * GRID_SIZE);
-        ctx.lineTo(canvas.width, i * GRID_SIZE);
+        ctx.moveTo(0, (i + 1) * GRID_SIZE);
+        ctx.lineTo(canvas.width, (i + 1) * GRID_SIZE);
         ctx.stroke();
     }
 
     // Draw X users
     xUsers.forEach(user => {
         if (!user.asked) {
-            ctx.fillStyle = user.powerUp ? '#ff0000' : '#000000'; // Red for power-up, black for regular
+            ctx.fillStyle = user.powerUp ? '#ff69b4' : '#000000';
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
             ctx.fillStyle = '#ffffff';
-            ctx.font = '12px Arial';
-            ctx.fillText(user.powerUp ? '⚡' : 'X friend', user.x * GRID_SIZE + 5, user.y * GRID_SIZE + 30);
+            ctx.font = user.powerUp ? '24px Arial' : '12px Arial';
+            ctx.fillText(user.powerUp ? '🏠' : 'X friend', user.x * GRID_SIZE + (user.powerUp ? 10 : 5), user.y * GRID_SIZE + (user.powerUp ? 35 : 30));
         } else {
             ctx.fillStyle = '#cccccc';
             ctx.fillRect(user.x * GRID_SIZE, user.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
@@ -115,27 +114,27 @@ function draw() {
     }
 
     // Username banner
-    ctx.fillStyle = '#000000'; // Black background
-    ctx.fillRect(0, 0, canvas.width, 40); // Wider banner
-    ctx.fillStyle = '#ffffff'; // White text
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, GRID_SIZE);
+    ctx.fillStyle = '#ffffff';
     ctx.font = '20px Arial';
-    ctx.fillText('@zeek56923765420', 10, 30);
+    ctx.fillText('@zeek56923765420', 10, 35);
 
-    // Speech bubble
+    // Speech bubble (longer)
     if (zeek.showMessage) {
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
+        ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 200, 30); // Widened to 200px
         ctx.strokeStyle = '#0288d1';
-        ctx.strokeRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 150, 30);
+        ctx.strokeRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 200, 30);
         ctx.fillStyle = '#000000';
         ctx.font = '14px Arial';
         ctx.fillText(zeek.message, zeek.x * GRID_SIZE + GRID_SIZE + 5, zeek.y * GRID_SIZE + 2);
     }
 
-    // Cleared message
+    // Cleared message (wider)
     if (flashTimer > 0) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(100, 200, 300, 100);
+        ctx.fillRect(75, 200, 350, 100); // Widened to 350px, centered
         ctx.fillStyle = '#ffffff';
         ctx.font = '20px Arial';
         ctx.textAlign = 'center';
@@ -147,10 +146,10 @@ function draw() {
     // Score and Level
     ctx.fillStyle = '#000000';
     ctx.font = '20px Arial';
-    ctx.fillText(`Score: ${score}`, 10, 70); // Adjusted for banner
-    ctx.fillText(`Level: ${level}`, 10, 100);
+    ctx.fillText(`Score: ${score}`, 10, 80);
+    ctx.fillText(`Level: ${level}`, 10, 110);
     if (powerUpActive) {
-        ctx.fillText("Power-Up Active!", 10, 130);
+        ctx.fillText("Power-Up Active!", 10, 140);
     }
 }
 
@@ -185,7 +184,7 @@ function checkCollision() {
             score += 10;
         }
         zeek.x = Math.max(0, Math.min(zeek.x, GRID_WIDTH - 1));
-        zeek.y = Math.max(0, Math.min(zeek.y, GRID_HEIGHT - 1));
+        zeek.y = Math.max(1, Math.min(zeek.y, GRID_HEIGHT));
     }
 }
 
@@ -194,10 +193,10 @@ document.addEventListener('keydown', (event) => {
     let moved = false;
     switch (event.key) {
         case 'ArrowUp':
-            if (zeek.y > 0) { zeek.y--; moved = true; }
+            if (zeek.y > 1) { zeek.y--; moved = true; }
             break;
         case 'ArrowDown':
-            if (zeek.y < GRID_HEIGHT - 1) { zeek.y++; moved = true; }
+            if (zeek.y < GRID_HEIGHT) { zeek.y++; moved = true; }
             break;
         case 'ArrowLeft':
             if (zeek.x > 0) { zeek.x--; moved = true; }
@@ -220,8 +219,8 @@ canvas.addEventListener('touchstart', (e) => {
     const touchY = Math.floor((touch.clientY - rect.top) / GRID_SIZE);
     if (touchX < zeek.x && zeek.x > 0) zeek.x--;
     if (touchX > zeek.x && zeek.x < GRID_WIDTH - 1) zeek.x++;
-    if (touchY < zeek.y && zeek.y > 0) zeek.y--;
-    if (touchY > zeek.y && zeek.y < GRID_HEIGHT - 1) zeek.y++;
+    if (touchY < zeek.y && zeek.y > 1) zeek.y--;
+    if (touchY > zeek.y && zeek.y < GRID_HEIGHT) zeek.y++;
     checkCollision();
 });
 
