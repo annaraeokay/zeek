@@ -12,8 +12,8 @@ zeekImage.onload = () => console.log('Zeek image loaded!');
 zeekImage.onerror = () => console.log('Error loading zeek.png');
 
 // Sound effects
-const victorySound = new Audio('victory.mp3');
-const thunderSound = new Audio('thunder.mp3');
+const victorySound = new Audio('victory.mp3'); // MP3
+const thunderSound = new Audio('thunder.wav'); // WAV
 
 let zeek = { x: 2, y: 1, message: "Is everything okay at home?", showMessage: false, messageTimer: 0 };
 let xUsers = [];
@@ -123,7 +123,7 @@ function draw() {
     // Speech bubble (longer)
     if (zeek.showMessage) {
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 200, 30); // Widened to 200px
+        ctx.fillRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 200, 30); // 200px wide
         ctx.strokeStyle = '#0288d1';
         ctx.strokeRect(zeek.x * GRID_SIZE + GRID_SIZE, zeek.y * GRID_SIZE - 20, 200, 30);
         ctx.fillStyle = '#000000';
@@ -134,7 +134,7 @@ function draw() {
     // Cleared message (wider)
     if (flashTimer > 0) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(75, 200, 350, 100); // Widened to 350px, centered
+        ctx.fillRect(75, 200, 350, 100); // 350px wide
         ctx.fillStyle = '#ffffff';
         ctx.font = '20px Arial';
         ctx.textAlign = 'center';
